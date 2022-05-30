@@ -33,7 +33,7 @@ class DREMTubesDetectorConstruction : public G4VUserDetectorConstruction {
         virtual ~DREMTubesDetectorConstruction();
 
     public:
-        virtual G4VPhysicalVolume* Construct();
+        virtual G4VPhysicalVolume* Construct() final;
 
         G4LogicalVolume* constructscinfiber(double tolerance,
                                             G4double tuberadius,
@@ -60,26 +60,24 @@ class DREMTubesDetectorConstruction : public G4VUserDetectorConstruction {
                                             G4Material* CladCherMaterial);
         //Getters
     	//
-	const G4VPhysicalVolume* GetLeakCntPV() const;
+	    const G4VPhysicalVolume* GetLeakCntPV() const;
     	const G4VPhysicalVolume* GetWorldPV() const;
 
         //Other methods
-	//
-	G4int GetTowerID( const G4int& cpno ) const;
+	    G4int GetTowerID( const G4int& cpno ) const;
         G4int GetSiPMID(const G4int& cpno ) const; 
     
     private:
         
         //Mandatory method for Geant4
-        //
-        G4VPhysicalVolume* DefineVolumes();
-
-				//Members
-				//
-        G4bool  fCheckOverlaps; // option for checking volumes overlaps
-				
-				G4VPhysicalVolume* fLeakCntPV; //PV: lekage counter
-				G4VPhysicalVolume* fWorldPV;   //PV: wourld volume
+        void defineMaterials();
+        G4VPhysicalVolume* ConstructHidra();
+        G4VPhysicalVolume* ConstructTbModule();
+		
+		//Members
+        G4bool  fCheckOverlaps; // option for checking volumes overlaps		
+		G4VPhysicalVolume* fLeakCntPV; //PV: lekage counter
+		G4VPhysicalVolume* fWorldPV;   //PV: wourld volume
 };
 
 inline G4int DREMTubesDetectorConstruction::GetTowerID( const G4int& cpno ) const {

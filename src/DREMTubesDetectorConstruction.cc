@@ -44,7 +44,7 @@
 DREMTubesDetectorConstruction::DREMTubesDetectorConstruction()
     : G4VUserDetectorConstruction(),
     fCheckOverlaps(false),
-		fLeakCntPV(nullptr),
+	fLeakCntPV(nullptr),
     fWorldPV(nullptr) {
 }
 
@@ -55,12 +55,14 @@ DREMTubesDetectorConstruction::~DREMTubesDetectorConstruction() {}
 //Define Construct() method
 G4VPhysicalVolume* DREMTubesDetectorConstruction::Construct() {
   
-    // Define volumes
-    return DefineVolumes();
+    defineMaterials();
+    // if(m_isHidraGeometry)
+    // return ConstructHidra();
+    // else 
+    return ConstructTbModule();
 }
 
-G4VPhysicalVolume* DREMTubesDetectorConstruction::DefineVolumes() {
-
+void DREMTubesDetectorConstruction::defineMaterials(){
     //--------------------------------------------------
     //Define Elements, Mixtures and Materials
     //--------------------------------------------------
@@ -308,6 +310,21 @@ G4VPhysicalVolume* DREMTubesDetectorConstruction::DefineVolumes() {
     // I don't want a slow component, if you want it must change
     ScinMaterial -> SetMaterialPropertiesTable(MPTScin);
 
+}
+
+G4VPhysicalVolume* DREMTubesDetectorConstruction::ConstructTbModule() {
+    // Retrieve Materials
+    G4Material* defaultMaterial = G4Material::GetMaterial("G4_AIR");
+    //G4Material* absorberMaterial = G4Material::GetMaterial("G4_Cu");
+    G4Material* SiMaterial = G4Material::GetMaterial("G4_Si");
+    G4Material* LeadMaterial = G4Material::GetMaterial("G4_Pb");
+    G4Material* PSScinMaterial = G4Material::GetMaterial("G4_POLYSTYRENE");
+    G4Material* absorberMaterial = G4Material::GetMaterial("Brass");
+    G4Material* ScinMaterial = G4Material::GetMaterial("Polystyrene");
+    G4Material* CherMaterial = G4Material::GetMaterial("PMMA");
+    G4Material* GlassMaterial = G4Material::GetMaterial("Glass");
+    G4Material* CladCherMaterial = G4Material::GetMaterial("Fluorinated_Polymer");
+
     //--------------------------------------------------
     //Define Volumes
     //--------------------------------------------------
@@ -553,48 +570,6 @@ G4VPhysicalVolume* DREMTubesDetectorConstruction::DefineVolumes() {
                                                      0,
                                                      fCheckOverlaps);
 
-    // Optical Surface properties between the glass and the Si of the SiPM
-    G4OpticalSurface* OpSurfaceGlassSi = new G4OpticalSurface("OpSurfaceGlassSi");
-    OpSurfaceGlassSi -> SetType(dielectric_metal);
-    OpSurfaceGlassSi -> SetModel(glisur);
-    OpSurfaceGlassSi -> SetFinish(polished);
-    G4double efficiencyOpSurfaceGlassSi[ENTRIES] =     //100% detection efficiency 
-                                    { 1, 1, 1, 1,
-                                      1, 1, 1, 1,
-                                      1, 1, 1, 1,
-                                      1, 1, 1, 1,
-                                      1, 1, 1, 1,
-                                      1, 1, 1, 1,
-                                      1, 1, 1, 1,
-                                      1, 1, 1, 1 };
-
-    /*G4double efficiencyOpSurfaceGlassSi[ENTRIES] =     //0% detection efficiency 
-                                    { 0, 0, 0, 0,
-                                      0, 0, 0, 0,
-                                      0, 0, 0, 0,
-                                      0, 0, 0, 0,
-                                      0, 0, 0, 0,
-                                      0, 0, 0, 0,
-                                      0, 0, 0, 0,
-                                      0, 0, 0, 0 };*/
-
-    G4double reflectivityOpSurfaceGlassSi[ENTRIES] =  // 0% reflection
-                                    { 0., 0., 0., 0.,
-                                      0., 0., 0., 0.,
-                                      0., 0., 0., 0.,
-                                      0., 0., 0., 0.,
-                                      0., 0., 0., 0.,
-                                      0., 0., 0., 0.,
-                                      0., 0., 0., 0.,
-                                      0., 0., 0., 0. };
-
-    G4MaterialPropertiesTable* MPTOpSurfaceGlassSi = new G4MaterialPropertiesTable();
-    MPTOpSurfaceGlassSi -> AddProperty("EFFICIENCY", 
-        photonEnergy, efficiencyOpSurfaceGlassSi, ENTRIES)->SetSpline(true);
-    MPTOpSurfaceGlassSi -> AddProperty("REFLECTIVITY", 
-            photonEnergy, reflectivityOpSurfaceGlassSi, ENTRIES)->SetSpline(true);
-    OpSurfaceGlassSi -> SetMaterialPropertiesTable(MPTOpSurfaceGlassSi);
-
     // SiPM
     //
     G4VSolid* SiPMS = new G4Box("SiPM", SiPMX/2, SiPMY/2, SiPMZ/2);
@@ -628,22 +603,6 @@ G4VPhysicalVolume* DREMTubesDetectorConstruction::DefineVolumes() {
     SiVisAtt->SetForceWireframe(true);
     SiVisAtt->SetForceSolid(true);
     SiLV->SetVisAttributes(SiVisAtt);
-
-    // Logical Skin Surface placement around the silicon of the SiPM
-    //
-    /*G4LogicalSkinSurface* OpsurfaceSi =*/ new G4LogicalSkinSurface("OpsurfaceSi", 
-        SiLV, OpSurfaceGlassSi);
-
-    // Optical Surface properties between the scintillating fibers
-    // and the default material
-    // I'm trying to define an optical surface completly blacked 
-    // as if we absorb the light at one end of fibers
-    //
-    G4OpticalSurface* OpSurfacedefault = new G4OpticalSurface("OpSurfacedefault");
-    OpSurfacedefault -> SetType(dielectric_dielectric);
-    OpSurfacedefault -> SetModel(unified);
-    OpSurfacedefault -> SetFinish(polishedbackpainted); 
-    // Painted from inside the fibers, light is absorbed
 
     // Tubes with scintillating fibers and SiPM next to them
     //
